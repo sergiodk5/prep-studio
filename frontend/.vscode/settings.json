@@ -16,5 +16,6 @@
   "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
   "[vue]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
   "[json]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
-  "[css]": { "editor.defaultFormatter": "oxc.oxc-vscode" }
+  "[css]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
+  "js/ts.experimental.useTsgo": false
 }

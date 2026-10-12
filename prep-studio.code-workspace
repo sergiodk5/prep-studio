@@ -1,3 +1,8 @@
 {
-  "folders": [{ "path": "frontend" }]
+  "folders": [{ "path": "frontend" }],
+  "settings": {
+    "js/ts.tsdk.path": "node_modules/typescript/lib",
+    "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+    "js/ts.experimental.useTsgo": false
+  }
 }
