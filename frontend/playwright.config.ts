@@ -51,12 +51,10 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
       },
     },
-    {
-      name: 'firefox',
-      use: {
-        ...devices['Desktop Firefox'],
-      },
-    },
+    // Firefox can't launch on macOS 27: https://github.com/microsoft/playwright/issues/42082
+    ...(process.platform === 'darwin'
+      ? []
+      : [{ name: 'firefox', use: { ...devices['Desktop Firefox'] } }]),
     {
       name: 'webkit',
       use: {

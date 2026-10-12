@@ -1,11 +1,13 @@
 <script setup lang="ts"></script>
 
 <template>
-  <h1 class="text-2xl font-bold">You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
-</template>
+  <div class="min-h-screen bg-slate-50 text-slate-900">
+    <header class="border-b border-slate-200 bg-white px-6 py-4">
+      <h1 class="text-xl font-semibold">Prep Studio</h1>
+    </header>
 
-<style scoped></style>
+    <main class="mx-auto max-w-5xl p-6">
+      <RouterView />
+    </main>
+  </div>
+</template>
