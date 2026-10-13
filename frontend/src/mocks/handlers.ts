@@ -1,3 +1,6 @@
-import { http, HttpResponse } from 'msw/http'
+import { createCourseHandlers } from '@/mocks/courses'
+import { createMockDb } from '@/mocks/db'
 
-export const handlers = [http.get('/api/health', () => HttpResponse.json({ ok: true }))]
+const db = createMockDb(localStorage)
+
+export const handlers = [...createCourseHandlers(db)]

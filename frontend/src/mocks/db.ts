@@ -59,3 +59,5 @@ function load(storage: Storage): MockData {
 
   return { courses: [] }
 }
+
+export type MockDb = ReturnType<typeof createMockDb>
