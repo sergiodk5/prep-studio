@@ -1,3 +1,5 @@
+import { httpClient } from '@/api/http'
+import { apiClientKey } from '@/api/injection'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 
@@ -15,6 +17,8 @@ if (import.meta.env.DEV) {
 }
 
 const app = createApp(App)
+
+app.provide(apiClientKey, httpClient)
 
 app.use(createPinia())
 app.use(router)
