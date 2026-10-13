@@ -23,7 +23,7 @@ jobs:
       - run: npm run check:format
       - run: npm run check:lint
       - run: npm run build
-      - run: npx vitest run --passWithNoTests
+      - run: npx vitest run
       - run: npx playwright install --with-deps
       - run: npx playwright test
       - uses: actions/upload-artifact@v7
