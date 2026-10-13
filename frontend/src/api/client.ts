@@ -1,0 +1,21 @@
+import type { Course, Id, Track } from '@/domain/types'
+
+export interface RequestOptions {
+  signal?: AbortSignal
+}
+
+export interface NewCourse {
+  title: string
+  track: Track
+  description: string
+}
+
+export type CourseChanges = Partial<NewCourse>
+
+export interface ApiClient {
+  listCourses(options?: RequestOptions): Promise<Course[]>
+  getCourse(id: Id, options?: RequestOptions): Promise<Course>
+  createCourse(input: NewCourse): Promise<Course>
+  updateCourse(id: Id, changes: CourseChanges, version: number): Promise<Course>
+  deleteCourse(id: Id): Promise<void>
+}
