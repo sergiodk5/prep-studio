@@ -167,4 +167,43 @@ describe('course store', () => {
       expect(store.courses).toEqual([])
     })
   })
+
+  describe('deleteCourse', () => {
+    const course = makeCourse()
+
+    async function setupWithDelete(deleteCourse: ApiClient['deleteCourse']) {
+      const store = setupStore({ listCourses: async () => [course], deleteCourse })
+      await store.loadCourses()
+      return store
+    }
+
+    it('removes the course after the server deletes it', async () => {
+      const store = await setupWithDelete(async () => undefined)
+
+      await store.deleteCourse(course.id)
+
+      expect(store.courses).toEqual([])
+    })
+
+    it('treats a 404 as already deleted', async () => {
+      const store = await setupWithDelete(async () => {
+        throw new ApiError(404, 'Course not found')
+      })
+
+      await expect(store.deleteCourse(course.id)).resolves.toBeUndefined()
+
+      expect(store.courses).toEqual([])
+    })
+
+    it('keeps the course and rethrows when the server fails', async () => {
+      const failure = new ApiError(500, 'Server error')
+      const store = await setupWithDelete(async () => {
+        throw failure
+      })
+
+      await expect(store.deleteCourse(course.id)).rejects.toBe(failure)
+
+      expect(store.courses).toEqual([course])
+    })
+  })
 })

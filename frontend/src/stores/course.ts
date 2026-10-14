@@ -56,6 +56,15 @@ export const useCourseStore = defineStore('course', () => {
     }
   }
 
+  async function deleteCourse(id: Id): Promise<void> {
+    try {
+      await api.deleteCourse(id)
+    } catch (caught) {
+      if (!(caught instanceof ApiError) || caught.status !== 404) throw caught
+    }
+    removeCourse(id)
+  }
+
   function replaceCourse(course: Course) {
     const index = courses.value.findIndex((item) => item.id === course.id)
     if (index >= 0) courses.value[index] = course
@@ -65,5 +74,5 @@ export const useCourseStore = defineStore('course', () => {
     courses.value = courses.value.filter((item) => item.id !== id)
   }
 
-  return { courses, status, error, isEmpty, loadCourses, createCourse, updateCourse }
+  return { courses, status, error, isEmpty, loadCourses, createCourse, updateCourse, deleteCourse }
 })
