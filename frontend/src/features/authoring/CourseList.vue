@@ -2,6 +2,7 @@
 import type { Track } from '@/domain/types'
 import { useCourseStore } from '@/stores/course'
 import { storeToRefs } from 'pinia'
+import { RouterLink } from 'vue-router'
 
 const store = useCourseStore()
 const { courses, isEmpty, status, error } = storeToRefs(store)
@@ -26,7 +27,15 @@ const TRACK_BADGES: Record<Track, { label: string; className: string }> = {
 
 <template>
   <section>
-    <h2 class="mb-4 text-lg font-semibold">Courses</h2>
+    <div class="mb-4 flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Courses</h2>
+      <RouterLink
+        :to="{ name: 'course-new' }"
+        class="rounded bg-slate-800 px-3 py-1 text-sm text-white"
+      >
+        New course
+      </RouterLink>
+    </div>
 
     <p v-if="status === 'loading'" role="status">Loading courses...</p>
 

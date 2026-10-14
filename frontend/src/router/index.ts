@@ -8,6 +8,11 @@ const router = createRouter({
       name: 'courses',
       component: () => import('@/features/authoring/CourseList.vue'),
     },
+    {
+      path: '/courses/new',
+      name: 'course-new',
+      component: () => import('@/features/authoring/CourseCreate.vue'),
+    },
   ],
 })
 
