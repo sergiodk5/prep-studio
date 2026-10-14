@@ -4,13 +4,15 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import type { NewCourse } from '@/api/client'
 import { httpClient } from '@/api/http'
 import { createCourseHandlers } from '@/mocks/courses'
+import type { MockData } from '@/mocks/db'
 import { createMockDb } from '@/mocks/db'
+import { seedData } from '@/mocks/seed'
 
 const server = setupServer()
 const input: NewCourse = { title: 'Technical screen', track: 'technical', description: '' }
 
-function startMockBackend() {
-  server.use(...createCourseHandlers(createMockDb(localStorage)))
+function startMockBackend(initial?: MockData) {
+  server.use(...createCourseHandlers(createMockDb(localStorage, initial)))
 }
 
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
@@ -39,11 +41,11 @@ describe('course handlers', () => {
     ).rejects.toMatchObject({ status: 409, current: { title: 'First edit', version: 2 } })
   })
 
-  it('returns 404 for an uknown course', async () => {
+  it('returns 404 for an unknown course', async () => {
     await expect(httpClient.getCourse('missing')).rejects.toMatchObject({ status: 404 })
   })
 
-  it('keeps data across a relead', async () => {
+  it('keeps data across a reload', async () => {
     const created = await httpClient.createCourse(input)
 
     server.resetHandlers()
@@ -59,5 +61,35 @@ describe('course handlers', () => {
 
     await expect(httpClient.getCourse(course.id)).rejects.toMatchObject({ status: 404 })
     await expect(httpClient.deleteCourse(course.id)).rejects.toMatchObject({ status: 404 })
+  })
+
+  describe('with seed data', () => {
+    beforeEach(() => {
+      server.resetHandlers()
+      startMockBackend(seedData)
+    })
+
+    it('seeds an empty storage', async () => {
+      await expect(httpClient.listCourses()).resolves.toEqual(seedData.courses)
+    })
+
+    it('does not re-seed after every course is deleted', async () => {
+      for (const course of seedData.courses) await httpClient.deleteCourse(course.id)
+
+      server.resetHandlers()
+      startMockBackend(seedData)
+
+      await expect(httpClient.listCourses()).resolves.toEqual([])
+    })
+
+    it('restores the full seed when storage is cleared', async () => {
+      await httpClient.deleteCourse('seed-technical')
+
+      localStorage.clear()
+      server.resetHandlers()
+      startMockBackend(seedData)
+
+      await expect(httpClient.listCourses()).resolves.toHaveLength(5)
+    })
   })
 })

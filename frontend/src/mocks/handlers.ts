@@ -1,6 +1,7 @@
 import { createCourseHandlers } from '@/mocks/courses'
 import { createMockDb } from '@/mocks/db'
+import { seedData } from '@/mocks/seed'
 
-const db = createMockDb(localStorage)
+const db = createMockDb(localStorage, seedData)
 
 export const handlers = [...createCourseHandlers(db)]

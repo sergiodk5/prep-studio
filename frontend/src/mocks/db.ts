@@ -3,7 +3,7 @@ import type { Course, Id } from '@/domain/types'
 
 const STORAGE_KEY = 'prep-studio:mock-db'
 
-interface MockData {
+export interface MockData {
   courses: Course[]
 }
 
@@ -12,8 +12,8 @@ export type UpdateResult =
   | { kind: 'not-found' }
   | { kind: 'conflict'; current: Course }
 
-export function createMockDb(storage: Storage) {
-  const data = load(storage)
+export function createMockDb(storage: Storage, initial: MockData = { courses: [] }) {
+  const data = load(storage, initial)
 
   function save() {
     storage.setItem(STORAGE_KEY, JSON.stringify(data))
@@ -49,7 +49,7 @@ export function createMockDb(storage: Storage) {
   }
 }
 
-function load(storage: Storage): MockData {
+function load(storage: Storage, initial: MockData): MockData {
   try {
     const raw = storage.getItem(STORAGE_KEY)
     if (raw) return JSON.parse(raw) as MockData
@@ -57,7 +57,7 @@ function load(storage: Storage): MockData {
     storage.removeItem(STORAGE_KEY)
   }
 
-  return { courses: [] }
+  return structuredClone(initial)
 }
 
 export type MockDb = ReturnType<typeof createMockDb>
