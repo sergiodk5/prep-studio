@@ -1,7 +1,7 @@
-import type { NewCourse } from '@/api/client'
+import type { CourseChanges, NewCourse } from '@/api/client'
 import { ApiError } from '@/api/errors'
 import { useApiClient } from '@/api/injection'
-import type { Course } from '@/domain/types'
+import type { Course, Id } from '@/domain/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
@@ -37,5 +37,33 @@ export const useCourseStore = defineStore('course', () => {
     return course
   }
 
-  return { courses, status, error, isEmpty, loadCourses, createCourse }
+  async function updateCourse(id: Id, changes: CourseChanges): Promise<Course> {
+    const course = courses.value.find((item) => item.id === id)
+
+    if (!course) throw new Error(`Course ${id} is not loaded`)
+
+    try {
+      const updated = await api.updateCourse(id, changes, course.version)
+      replaceCourse(updated)
+      return updated
+    } catch (caught) {
+      if (caught instanceof ApiError && caught.status === 409) {
+        replaceCourse(caught.current as Course)
+      }
+      if (caught instanceof ApiError && caught.status === 404) removeCourse(id)
+
+      throw caught
+    }
+  }
+
+  function replaceCourse(course: Course) {
+    const index = courses.value.findIndex((item) => item.id === course.id)
+    if (index >= 0) courses.value[index] = course
+  }
+
+  function removeCourse(id: Id) {
+    courses.value = courses.value.filter((item) => item.id !== id)
+  }
+
+  return { courses, status, error, isEmpty, loadCourses, createCourse, updateCourse }
 })

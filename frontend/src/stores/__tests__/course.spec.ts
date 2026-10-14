@@ -114,4 +114,57 @@ describe('course store', () => {
     expect(store.courses).toEqual([existing])
     expect(store.error).toBeNull()
   })
+
+  describe('updateCourse', () => {
+    const mine = makeCourse({ version: 1 })
+
+    it('sends the loaded version and stores the updated course', async () => {
+      const updated = makeCourse({ title: 'Renamed', version: 2 })
+      const sentVersions: number[] = []
+      const store = setupStore({
+        listCourses: async () => [mine],
+        updateCourse: async (_id, _changes, version) => {
+          sentVersions.push(version)
+          return updated
+        },
+      })
+      await store.loadCourses()
+
+      await store.updateCourse(mine.id, { title: 'Renamed' })
+
+      expect(sentVersions).toEqual([1])
+      expect(store.courses).toEqual([updated])
+    })
+
+    it('stores the current course from a 409 and rethrows', async () => {
+      const theirs = makeCourse({ title: 'Their title', version: 2 })
+      const conflict = new ApiError(409, 'Changed', { current: theirs })
+      const store = setupStore({
+        listCourses: async () => [mine],
+        updateCourse: async () => {
+          throw conflict
+        },
+      })
+      await store.loadCourses()
+
+      await expect(store.updateCourse(mine.id, { title: 'Mine' })).rejects.toBe(conflict)
+
+      expect(store.courses).toEqual([theirs])
+    })
+
+    it('removes a course the server no longer has and rethrows', async () => {
+      const notFound = new ApiError(404, 'Course not found')
+      const store = setupStore({
+        listCourses: async () => [mine],
+        updateCourse: async () => {
+          throw notFound
+        },
+      })
+      await store.loadCourses()
+
+      await expect(store.updateCourse(mine.id, { title: 'Mine' })).rejects.toBe(notFound)
+
+      expect(store.courses).toEqual([])
+    })
+  })
 })
