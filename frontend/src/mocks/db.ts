@@ -13,36 +13,41 @@ export type UpdateResult =
   | { kind: 'conflict'; current: Course }
 
 export function createMockDb(storage: Storage, initial: MockData = { courses: [] }) {
-  const data = load(storage, initial)
+  function read(): MockData {
+    return load(storage, initial)
+  }
 
-  function save() {
+  function write(data: MockData) {
     storage.setItem(STORAGE_KEY, JSON.stringify(data))
   }
 
   return {
-    listCourses: () => data.courses,
-    findCourse: (id: Id) => data.courses.find((course) => course.id === id),
+    listCourses: () => read().courses,
+    findCourse: (id: Id) => read().courses.find((course) => course.id === id),
     insertCourse(course: Course) {
+      const data = read()
       data.courses.push(course)
-      save()
+      write(data)
     },
     updateCourse(id: Id, changes: CourseChanges, version: number): UpdateResult {
+      const data = read()
       const course = data.courses.find((course) => course.id === id)
       if (!course) return { kind: 'not-found' }
       if (course.version !== version) return { kind: 'conflict', current: course }
 
       Object.assign(course, changes, { version: version + 1, updatedAt: new Date().toISOString() })
-      save()
+      write(data)
 
       return { kind: 'ok', course }
     },
     deleteCourse(id: Id): boolean {
+      const data = read()
       const index = data.courses.findIndex((course) => course.id === id)
 
       if (index < 0) return false
 
       data.courses.splice(index, 1)
-      save()
+      write(data)
 
       return true
     },
