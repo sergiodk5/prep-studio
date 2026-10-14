@@ -1,3 +1,4 @@
+import type { NewCourse } from '@/api/client'
 import { ApiError } from '@/api/errors'
 import { useApiClient } from '@/api/injection'
 import type { Course } from '@/domain/types'
@@ -30,5 +31,11 @@ export const useCourseStore = defineStore('course', () => {
     }
   }
 
-  return { courses, status, error, isEmpty, loadCourses }
+  async function createCourse(input: NewCourse): Promise<Course> {
+    const course = await api.createCourse(input)
+    courses.value.push(course)
+    return course
+  }
+
+  return { courses, status, error, isEmpty, loadCourses, createCourse }
 })

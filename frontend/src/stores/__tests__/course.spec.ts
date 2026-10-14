@@ -79,4 +79,39 @@ describe('course store', () => {
     expect(store.status).toBe('error')
     expect(store.error).toBeNull()
   })
+
+  it('adds the course returned by the server', async () => {
+    const created = makeCourse({ id: 'new' })
+    const store = setupStore({
+      listCourses: async () => [],
+      createCourse: async () => created,
+    })
+    await store.loadCourses()
+
+    await store.createCourse({ title: 'Technical screen', track: 'technical', description: '' })
+
+    expect(store.courses).toEqual([created])
+    expect(store.isEmpty).toBe(false)
+  })
+
+  it('leaves the store untouched when the server rejects the course', async () => {
+    const existing = makeCourse()
+    const rejection = new ApiError(422, 'Invalid', {
+      fieldErrors: { title: ['Title is required'] },
+    })
+    const store = setupStore({
+      listCourses: async () => [existing],
+      createCourse: async () => {
+        throw rejection
+      },
+    })
+    await store.loadCourses()
+
+    await expect(
+      store.createCourse({ title: '', track: 'technical', description: '' }),
+    ).rejects.toBe(rejection)
+
+    expect(store.courses).toEqual([existing])
+    expect(store.error).toBeNull()
+  })
 })
