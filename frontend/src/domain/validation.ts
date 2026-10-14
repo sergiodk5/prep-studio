@@ -30,3 +30,7 @@ export function validateCourse(fields: CourseFields, mode: ValidationMode): Vali
 export function isTrack(value: unknown): value is Track {
   return (TRACKS as readonly unknown[]).includes(value)
 }
+
+export function hasErrors(errors: ValidationErrors): boolean {
+  return Object.keys(errors).length > 0
+}

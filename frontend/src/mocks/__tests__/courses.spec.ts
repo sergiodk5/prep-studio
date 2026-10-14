@@ -63,6 +63,41 @@ describe('course handlers', () => {
     await expect(httpClient.deleteCourse(course.id)).rejects.toMatchObject({ status: 404 })
   })
 
+  it('stores a trimmed title on create', async () => {
+    const created = await httpClient.createCourse({ ...input, title: '  Technical screen  ' })
+
+    expect(created.title).toBe('Technical screen')
+  })
+
+  it('rejects an invalid new course with 422 and stores nothing', async () => {
+    await expect(httpClient.createCourse({ ...input, title: '   ' })).rejects.toMatchObject({
+      status: 422,
+      fieldErrors: { title: ['Title is required'] },
+    })
+    await expect(httpClient.listCourses()).resolves.toEqual([])
+  })
+
+  it('rejects an invalid update with 422 and keeps the course unchanged', async () => {
+    const created = await httpClient.createCourse(input)
+
+    await expect(
+      httpClient.updateCourse(created.id, { title: '   ' }, created.version),
+    ).rejects.toMatchObject({ status: 422, fieldErrors: { title: ['Title is required'] } })
+    await expect(httpClient.getCourse(created.id)).resolves.toEqual(created)
+  })
+
+  it('stores a trimmed title on update without touching other fields', async () => {
+    const created = await httpClient.createCourse(input)
+
+    const updated = await httpClient.updateCourse(
+      created.id,
+      { title: '  Renamed  ' },
+      created.version,
+    )
+
+    expect(updated).toMatchObject({ title: 'Renamed', track: input.track, version: 2 })
+  })
+
   describe('with seed data', () => {
     beforeEach(() => {
       server.resetHandlers()

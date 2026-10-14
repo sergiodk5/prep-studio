@@ -2,6 +2,8 @@ import { http, HttpResponse } from 'msw/http'
 
 import type { CourseChanges, NewCourse } from '@/api/client'
 import type { Course } from '@/domain/types'
+import type { ValidationErrors } from '@/domain/validation'
+import { hasErrors, validateCourse } from '@/domain/validation'
 import type { MockDb } from '@/mocks/db'
 
 export function createCourseHandlers(db: MockDb) {
@@ -15,9 +17,15 @@ export function createCourseHandlers(db: MockDb) {
 
     http.post<never, NewCourse>('/api/courses', async ({ request }) => {
       const input = await request.json()
+      const errors = validateCourse(input, 'create')
+
+      if (hasErrors(errors)) return unprocessable(errors)
+
       const course: Course = {
         id: crypto.randomUUID(),
-        ...input,
+        title: input.title.trim(),
+        track: input.track,
+        description: input.description ?? '',
         outline: [],
         version: 1,
         updatedAt: new Date().toISOString(),
@@ -30,6 +38,11 @@ export function createCourseHandlers(db: MockDb) {
       '/api/courses/:id',
       async ({ params, request }) => {
         const { version, ...changes } = await request.json()
+        const errors = validateCourse(changes, 'update')
+
+        if (hasErrors(errors)) return unprocessable(errors)
+        if (typeof changes.title === 'string') changes.title = changes.title.trim()
+
         const result = db.updateCourse(params.id, changes, version)
 
         switch (result.kind) {
@@ -58,4 +71,11 @@ export function createCourseHandlers(db: MockDb) {
 
 function notFound() {
   return HttpResponse.json({ message: 'Course not found' }, { status: 404 })
+}
+
+function unprocessable(errors: ValidationErrors) {
+  return HttpResponse.json(
+    { message: 'Please fix the highlighted fields', errors },
+    { status: 422 },
+  )
 }
