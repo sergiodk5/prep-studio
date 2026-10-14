@@ -20,7 +20,7 @@ describe('validateCourse', () => {
     expect(errors.title).toEqual([`Title must be ${TITLE_MAX_LENGTH} characters or fewer`])
   })
 
-  it('returns no error when the title passed is less than TITLE_MAX_LENGTH', () => {
+  it('accepts a title of exactly TITLE_MAX_LENGTH', () => {
     const errors = validateCourse(
       {
         title: 'a'.repeat(TITLE_MAX_LENGTH),
