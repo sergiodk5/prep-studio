@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import LessonAddForm from '@/features/authoring/LessonAddForm.vue'
+import LessonRow from '@/features/authoring/LessonRow.vue'
 import { TRACK_BADGES } from '@/features/authoring/tracks'
 import { useOutlineStore } from '@/stores/outline'
 import { storeToRefs } from 'pinia'
@@ -52,10 +54,10 @@ watch(
         aria-label="Lessons"
         class="divide-y divide-slate-200 rounded border border-slate-200 bg-white"
       >
-        <li v-for="entry in course.outline" :key="entry.lessonId" class="px-4 py-3">
-          {{ entry.title }}
-        </li>
+        <LessonRow v-for="entry in course.outline" :key="entry.lessonId" :entry="entry" />
       </ol>
+
+      <LessonAddForm />
     </template>
   </section>
 </template>
