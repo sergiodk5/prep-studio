@@ -18,6 +18,10 @@ export interface ApiClient {
   createCourse(input: NewCourse): Promise<Course>
   updateCourse(id: Id, changes: CourseChanges, version: number): Promise<Course>
   deleteCourse(id: Id): Promise<void>
+  getLesson(id: Id, options?: RequestOptions): Promise<Lesson>
+  createLesson(courseId: Id, input: NewLesson): Promise<Lesson>
+  updateLesson(id: Id, changes: LessonChanges, version: number): Promise<Lesson>
+  deleteLesson(id: Id): Promise<void>
 }
 
 export interface NewLesson {

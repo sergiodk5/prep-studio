@@ -47,6 +47,7 @@ export function createMockDb(storage: Storage, initial: MockData = { courses: []
       if (index < 0) return false
 
       data.courses.splice(index, 1)
+      data.lessons = data.lessons.filter((lesson) => lesson.courseId !== id)
       write(data)
 
       return true

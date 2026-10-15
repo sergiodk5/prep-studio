@@ -45,4 +45,10 @@ export const httpClient: ApiClient = {
   updateCourse: (id, changes, version) =>
     request('PATCH', `/courses/${encodeURIComponent(id)}`, { body: { ...changes, version } }),
   deleteCourse: (id) => request('DELETE', `/courses/${encodeURIComponent(id)}`),
+  getLesson: (id, options) => request('GET', `/lessons/${encodeURIComponent(id)}`, options),
+  createLesson: (courseId, input) =>
+    request('POST', `/courses/${encodeURIComponent(courseId)}/lessons`, { body: input }),
+  updateLesson: (id, changes, version) =>
+    request('PATCH', `/lessons/${encodeURIComponent(id)}`, { body: { ...changes, version } }),
+  deleteLesson: (id) => request('DELETE', `/lessons/${encodeURIComponent(id)}`),
 }

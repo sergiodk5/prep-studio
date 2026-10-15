@@ -2,9 +2,9 @@ import { http, HttpResponse } from 'msw/http'
 
 import type { CourseChanges, NewCourse } from '@/api/client'
 import type { Course } from '@/domain/types'
-import type { ValidationErrors } from '@/domain/validation'
 import { hasErrors, validateCourse } from '@/domain/validation'
 import type { MockDb } from '@/mocks/db'
+import { conflict, notFound, unprocessable } from '@/mocks/responses'
 
 export function createCourseHandlers(db: MockDb) {
   return [
@@ -12,7 +12,7 @@ export function createCourseHandlers(db: MockDb) {
 
     http.get<{ id: string }>('/api/courses/:id', ({ params }) => {
       const course = db.findCourse(params.id)
-      return course ? HttpResponse.json(course) : notFound()
+      return course ? HttpResponse.json(course) : notFound('Course not found')
     }),
 
     http.post<never, NewCourse>('/api/courses', async ({ request }) => {
@@ -49,12 +49,9 @@ export function createCourseHandlers(db: MockDb) {
           case 'ok':
             return HttpResponse.json(result.value)
           case 'not-found':
-            return notFound()
+            return notFound('Course not found')
           case 'conflict':
-            return HttpResponse.json(
-              { message: 'This course was changed by someone else', current: result.current },
-              { status: 409 },
-            )
+            return conflict('This course was changed by someone else', result.current)
         }
       },
     ),
@@ -62,20 +59,9 @@ export function createCourseHandlers(db: MockDb) {
     http.delete<{ id: string }>('/api/courses/:id', ({ params }) => {
       const deleted = db.deleteCourse(params.id)
 
-      if (!deleted) return notFound()
+      if (!deleted) return notFound('Course not found')
 
       return new HttpResponse(null, { status: 204 })
     }),
   ]
-}
-
-function notFound() {
-  return HttpResponse.json({ message: 'Course not found' }, { status: 404 })
-}
-
-function unprocessable(errors: ValidationErrors) {
-  return HttpResponse.json(
-    { message: 'Please fix the highlighted fields', errors },
-    { status: 422 },
-  )
 }
