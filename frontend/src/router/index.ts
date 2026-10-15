@@ -13,6 +13,12 @@ const router = createRouter({
       name: 'course-new',
       component: () => import('@/features/authoring/CourseCreate.vue'),
     },
+    {
+      path: '/courses/:id',
+      name: 'course',
+      component: () => import('@/features/authoring/CourseOutline.vue'),
+      props: true,
+    },
   ],
 })
 

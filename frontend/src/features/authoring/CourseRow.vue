@@ -5,6 +5,7 @@ import { validateCourse } from '@/domain/validation'
 import { TRACK_BADGES } from '@/features/authoring/tracks'
 import { useCourseStore } from '@/stores/course'
 import { nextTick, ref, useTemplateRef } from 'vue'
+import { RouterLink } from 'vue-router'
 
 const { course } = defineProps<{ course: Course }>()
 const { updateCourse, deleteCourse } = useCourseStore()
@@ -97,7 +98,12 @@ function messageFor(error: ApiError): string {
       </p>
     </form>
     <template v-else>
-      <span class="flex-1 font-medium">{{ course.title }}</span>
+      <RouterLink
+        :to="{ name: 'course', params: { id: course.id } }"
+        class="flex-1 font-medium hover:underline"
+      >
+        {{ course.title }}
+      </RouterLink>
       <button
         type="button"
         class="text-sm underline"
