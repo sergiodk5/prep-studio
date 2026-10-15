@@ -4,6 +4,7 @@ import type { OutlineEntry } from '@/domain/types'
 import { validateLesson } from '@/domain/validation'
 import { useOutlineStore } from '@/stores/outline'
 import { nextTick, ref, useTemplateRef } from 'vue'
+import { RouterLink } from 'vue-router'
 
 const { entry } = defineProps<{ entry: OutlineEntry }>()
 const { renameLesson, deleteLesson } = useOutlineStore()
@@ -93,7 +94,12 @@ async function remove() {
       </p>
     </form>
     <template v-else>
-      <span class="flex-1">{{ entry.title }}</span>
+      <RouterLink
+        :to="{ name: 'lesson', params: { id: entry.lessonId } }"
+        class="flex-1 hover:underline"
+      >
+        {{ entry.title }}
+      </RouterLink>
       <button
         type="button"
         class="text-sm underline"

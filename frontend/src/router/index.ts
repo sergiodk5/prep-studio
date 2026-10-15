@@ -19,6 +19,12 @@ const router = createRouter({
       component: () => import('@/features/authoring/CourseOutline.vue'),
       props: true,
     },
+    {
+      path: '/lessons/:id',
+      name: 'lesson',
+      component: () => import('@/features/authoring/LessonEditor.vue'),
+      props: true,
+    },
   ],
 })
 
