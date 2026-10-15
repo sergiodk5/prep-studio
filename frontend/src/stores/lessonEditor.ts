@@ -33,6 +33,7 @@ export const useLessonEditorStore = defineStore('lessonEditor', () => {
       lesson.value !== null &&
       (draft.value.title !== lesson.value.title || draft.value.notes !== lesson.value.notes),
   )
+  const hasUnsavedChanges = computed(() => isDirty.value || saveState.value === 'saving')
 
   watch(
     draft,
@@ -117,5 +118,21 @@ export const useLessonEditorStore = defineStore('lessonEditor', () => {
     }
   }
 
-  return { lesson, draft, status, error, saveState, saveError, isDirty, load, save }
+  async function flush(): Promise<void> {
+    if (saveState.value !== 'conflict') await save()
+  }
+
+  return {
+    lesson,
+    draft,
+    status,
+    error,
+    saveState,
+    saveError,
+    isDirty,
+    hasUnsavedChanges,
+    load,
+    save,
+    flush,
+  }
 })

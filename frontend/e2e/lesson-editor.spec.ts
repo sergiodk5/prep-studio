@@ -48,3 +48,37 @@ test('autosaves after the user stops typing', async ({ page }) => {
   await page.reload()
   await expect(page.getByLabel('Notes (Markdown)')).toHaveValue('Measure before you optimise')
 })
+
+test('saves right away when leaving before autosave runs', async ({ page }) => {
+  await page.goto('/lessons/seed-technical-lesson-3')
+
+  await page.getByLabel('Notes (Markdown)').fill('Embed what you read together')
+  await page.getByRole('link', { name: 'Back to course' }).click()
+  await expect(page.getByRole('heading', { name: 'Technical screen' })).toBeVisible()
+
+  await page.getByRole('link', { name: 'MongoDB data modelling' }).click()
+  await expect(page.getByLabel('Notes (Markdown)')).toHaveValue('Embed what you read together')
+})
+
+test('asks before leaving a lesson that cannot be saved', async ({ page }) => {
+  await page.goto('/lessons/seed-technical-lesson-3')
+  await page.getByLabel('Title', { exact: true }).fill('')
+
+  page.once('dialog', (dialog) => dialog.dismiss())
+  await page.getByRole('link', { name: 'Back to course' }).click()
+  await expect(page.getByLabel('Title', { exact: true })).toBeVisible()
+
+  page.once('dialog', (dialog) => dialog.accept())
+  await page.getByRole('link', { name: 'Back to course' }).click()
+  await expect(page.getByRole('heading', { name: 'Technical screen' })).toBeVisible()
+})
+
+test('warns before closing the tab with unsaved changes', async ({ page }) => {
+  await page.goto('/lessons/seed-technical-lesson-3')
+  await page.getByLabel('Title', { exact: true }).fill('')
+
+  const dialog = page.waitForEvent('dialog')
+  await page.close({ runBeforeUnload: true })
+
+  expect((await dialog).type()).toBe('beforeunload')
+})

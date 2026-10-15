@@ -2,13 +2,14 @@
 import { validateLesson } from '@/domain/validation'
 import { useLessonEditorStore } from '@/stores/lessonEditor'
 import { storeToRefs } from 'pinia'
-import { computed, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { computed, onBeforeUnmount, watch } from 'vue'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, RouterLink } from 'vue-router'
 
 const { id } = defineProps<{ id: string }>()
 const store = useLessonEditorStore()
-const { lesson, draft, status, error, saveState, saveError, isDirty } = storeToRefs(store)
-const { load, save } = store
+const { lesson, draft, status, error, saveState, saveError, isDirty, hasUnsavedChanges } =
+  storeToRefs(store)
+const { load, save, flush } = store
 
 const titleError = computed(
   () => validateLesson({ title: draft.value.title }, 'update').title?.[0] ?? null,
@@ -35,6 +36,27 @@ watch(
   (lessonId) => load(lessonId),
   { immediate: true },
 )
+
+async function confirmLeave(): Promise<boolean> {
+  await flush()
+  return (
+    !hasUnsavedChanges.value || window.confirm('This lesson has unsaved changes. Leave anyway?')
+  )
+}
+
+onBeforeRouteLeave(confirmLeave)
+onBeforeRouteUpdate(confirmLeave)
+
+function warnBeforeUnload(event: BeforeUnloadEvent) {
+  event.preventDefault()
+}
+
+watch(hasUnsavedChanges, (unsaved) => {
+  if (unsaved) window.addEventListener('beforeunload', warnBeforeUnload)
+  else window.removeEventListener('beforeunload', warnBeforeUnload)
+})
+
+onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeUnload))
 </script>
 
 <template>

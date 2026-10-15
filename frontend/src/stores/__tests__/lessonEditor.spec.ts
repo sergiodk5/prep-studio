@@ -162,6 +162,34 @@ describe('lesson editor store', () => {
     expect(store.saveState).toBe('idle')
   })
 
+  it('saves pending changes right away when flushed', async () => {
+    const { calls, updateLesson } = recordingUpdate(async () =>
+      makeLesson({ notes: 'Mine', version: 4 }),
+    )
+    const store = await setupLoaded({ updateLesson })
+    store.draft.notes = 'Mine'
+
+    await store.flush()
+
+    expect(calls).toHaveLength(1)
+    expect(store.hasUnsavedChanges).toBe(false)
+  })
+
+  it('does not overwrite their lesson when flushed after a conflict', async () => {
+    const theirs = makeLesson({ notes: 'Theirs', version: 4 })
+    const { calls, updateLesson } = recordingUpdate(async () => {
+      throw new ApiError(409, 'Changed', { current: theirs })
+    })
+    const store = await setupLoaded({ updateLesson })
+    store.draft.notes = 'Mine'
+    await store.save()
+
+    await store.flush()
+
+    expect(calls).toHaveLength(1)
+    expect(store.hasUnsavedChanges).toBe(true)
+  })
+
   describe('autosave', () => {
     beforeEach(() => {
       vi.useFakeTimers()
