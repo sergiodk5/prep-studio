@@ -7,7 +7,7 @@ test('edits a lesson and keeps the changes after a reload', async ({ page }) => 
   await page.getByLabel('Title', { exact: true }).fill('Vue state and Pinia stores')
   await page.getByLabel('Notes (Markdown)').fill('- Stores by domain\n- Plain refs')
   await expect(page.getByRole('status')).toHaveText('Unsaved changes')
-  await page.getByRole('button', { name: 'Save' }).click()
+  await page.getByRole('button', { name: 'Save now' }).click()
   await expect(page.getByRole('status')).toHaveText('All changes saved')
 
   await page.reload()
@@ -25,15 +25,26 @@ test('shows a conflict when another tab saved the lesson first', async ({ contex
   await tabB.goto('/lessons/seed-technical-lesson-1')
 
   await tabA.getByLabel('Notes (Markdown)').fill('From tab A')
-  await tabA.getByRole('button', { name: 'Save' }).click()
+  await tabA.getByRole('button', { name: 'Save now' }).click()
   await expect(tabA.getByRole('status')).toHaveText('All changes saved')
 
   await tabB.getByLabel('Notes (Markdown)').fill('From tab B')
-  await tabB.getByRole('button', { name: 'Save' }).click()
+  await tabB.getByRole('button', { name: 'Save now' }).click()
   await expect(tabB.getByRole('alert')).toHaveText(
-    'Someone else saved this lesson first. Save again to keep your version.',
+    'Someone else saved this lesson first. Autosave is paused. Save again to keep your version.',
   )
 
-  await tabB.getByRole('button', { name: 'Save' }).click()
+  await tabB.getByRole('button', { name: 'Save now' }).click()
   await expect(tabB.getByRole('status')).toHaveText('All changes saved')
+})
+
+test('autosaves after the user stops typing', async ({ page }) => {
+  await page.goto('/lessons/seed-technical-lesson-2')
+
+  await page.getByLabel('Notes (Markdown)').fill('Measure before you optimise')
+  await expect(page.getByRole('status')).toHaveText('Unsaved changes')
+  await expect(page.getByRole('status')).toHaveText('All changes saved')
+
+  await page.reload()
+  await expect(page.getByLabel('Notes (Markdown)')).toHaveValue('Measure before you optimise')
 })

@@ -1,52 +1,40 @@
 <script setup lang="ts">
-import { ApiError } from '@/api/errors'
-import type { ValidationErrors } from '@/domain/validation'
-import { hasErrors, validateLesson } from '@/domain/validation'
+import { validateLesson } from '@/domain/validation'
 import { useLessonEditorStore } from '@/stores/lessonEditor'
 import { storeToRefs } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
 const { id } = defineProps<{ id: string }>()
 const store = useLessonEditorStore()
-const { lesson, draft, status, error, isDirty } = storeToRefs(store)
+const { lesson, draft, status, error, saveState, saveError, isDirty } = storeToRefs(store)
 const { load, save } = store
 
-const errors = ref<ValidationErrors>({})
-const formError = ref<string | null>(null)
-const saving = ref(false)
+const titleError = computed(
+  () => validateLesson({ title: draft.value.title }, 'update').title?.[0] ?? null,
+)
+
+const statusText = computed(() => {
+  if (saveState.value === 'saving') return 'Saving...'
+  if (saveState.value === 'failed') return 'Failed to save'
+  if (saveState.value === 'conflict') return 'Not saved'
+  return isDirty.value ? 'Unsaved changes' : 'All changes saved'
+})
+
+const saveMessage = computed(() => {
+  if (saveState.value === 'conflict') {
+    return 'Someone else saved this lesson first. Autosave is paused. Save again to keep your version.'
+  }
+  if (saveState.value !== 'failed') return null
+  if (saveError.value?.status === 404) return 'This lesson was deleted.'
+  return saveError.value?.message ?? 'Could not save the lesson.'
+})
 
 watch(
   () => id,
   (lessonId) => load(lessonId),
   { immediate: true },
 )
-
-async function submit() {
-  formError.value = null
-  errors.value = validateLesson({ title: draft.value.title }, 'update')
-  if (hasErrors(errors.value)) return
-
-  saving.value = true
-  try {
-    await save()
-  } catch (caught) {
-    if (!(caught instanceof ApiError)) throw caught
-
-    if (caught.status === 422) errors.value = caught.fieldErrors
-    else formError.value = messageFor(caught)
-  } finally {
-    saving.value = false
-  }
-}
-
-function messageFor(caught: ApiError): string {
-  if (caught.status === 409) {
-    return 'Someone else saved this lesson first. Save again to keep your version.'
-  }
-  if (caught.status === 404) return 'This lesson was deleted.'
-  return caught.message
-}
 </script>
 
 <template>
@@ -77,7 +65,7 @@ function messageFor(caught: ApiError): string {
 
       <form
         class="mt-4 space-y-3 rounded border border-slate-200 bg-white p-4"
-        @submit.prevent="submit"
+        @submit.prevent="save"
       >
         <div>
           <label for="lesson-title" class="block text-sm font-medium">Title</label>
@@ -85,11 +73,11 @@ function messageFor(caught: ApiError): string {
             id="lesson-title"
             v-model="draft.title"
             class="w-full rounded border px-2 py-1"
-            :aria-invalid="Boolean(errors.title)"
+            :aria-invalid="Boolean(titleError)"
             aria-describedby="lesson-title-error"
           />
-          <p v-if="errors.title" id="lesson-title-error" class="text-sm text-red-700">
-            {{ errors.title[0] }}
+          <p v-if="titleError" id="lesson-title-error" class="text-sm text-red-700">
+            {{ titleError }}
           </p>
         </div>
 
@@ -103,18 +91,18 @@ function messageFor(caught: ApiError): string {
           ></textarea>
         </div>
 
-        <p v-if="formError" role="alert" class="text-sm text-red-700">{{ formError }}</p>
+        <p v-if="saveMessage" role="alert" class="text-sm text-red-700">{{ saveMessage }}</p>
 
         <div class="flex items-center gap-3">
           <button
             type="submit"
-            :disabled="saving || !isDirty"
+            :disabled="saveState === 'saving' || !isDirty || Boolean(titleError)"
             class="rounded bg-slate-800 px-3 py-1 text-sm text-white disabled:opacity-50"
           >
-            Save
+            Save now
           </button>
           <p role="status" class="text-sm text-slate-600">
-            {{ saving ? 'Saving...' : isDirty ? 'Unsaved changes' : 'All changes saved' }}
+            {{ statusText }}
           </p>
         </div>
       </form>
