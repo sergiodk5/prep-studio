@@ -47,7 +47,7 @@ export function createCourseHandlers(db: MockDb) {
 
         switch (result.kind) {
           case 'ok':
-            return HttpResponse.json(result.course)
+            return HttpResponse.json(result.value)
           case 'not-found':
             return notFound()
           case 'conflict':

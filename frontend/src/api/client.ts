@@ -1,4 +1,4 @@
-import type { Course, Id, Track } from '@/domain/types'
+import type { Course, Id, Lesson, Track } from '@/domain/types'
 
 export interface RequestOptions {
   signal?: AbortSignal
@@ -19,3 +19,9 @@ export interface ApiClient {
   updateCourse(id: Id, changes: CourseChanges, version: number): Promise<Course>
   deleteCourse(id: Id): Promise<void>
 }
+
+export interface NewLesson {
+  title: string
+}
+
+export type LessonChanges = Partial<Pick<Lesson, 'title' | 'notes' | 'tags' | 'items'>>
