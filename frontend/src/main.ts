@@ -9,11 +9,8 @@ import App from '@/App.vue'
 import router from '@/router'
 
 if (import.meta.env.DEV) {
-  const { network } = await import('virtual:msw')
-  const { handlers } = await import('@/mocks/handlers')
-
-  network.configure({ handlers })
-  await network.enable()
+  const { startMocking } = await import('@/mocks/browser')
+  await startMocking()
 }
 
 const app = createApp(App)
