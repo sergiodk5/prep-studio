@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Track;
 use App\Models\Course;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +20,7 @@ class CourseFactory extends Factory
     {
         return [
             'title' => fake()->sentence(3),
-            'track' => fake()->randomElement(['technical', 'pm', 'tech-lead', 'behavioural', 'reverse']),
+            'track' => fake()->randomElement(Track::cases())->value,
             'description' => fake()->sentence(),
         ];
     }
