@@ -8,6 +8,7 @@ use App\Http\Resources\CourseResource;
 use App\Models\Course;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class CourseController extends Controller
 {
@@ -55,8 +56,10 @@ class CourseController extends Controller
         return new CourseResource($course);
     }
 
-    public function destroy(Course $course)
+    public function destroy(Course $course): Response
     {
-        //
+        $course->delete();
+
+        return response()->noContent();
     }
 }

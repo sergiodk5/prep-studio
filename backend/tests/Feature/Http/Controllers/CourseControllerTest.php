@@ -3,6 +3,7 @@
 use App\Models\Course;
 use MongoDB\BSON\ObjectId;
 
+use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\patchJson;
 use function Pest\Laravel\postJson;
@@ -155,5 +156,16 @@ describe('update', function () {
             ->assertJsonValidationErrors(['version']);
 
         expect($course->fresh()->title)->toBe('Old');
+    });
+});
+
+describe('destroy', function () {
+    it('deletes only that course and returns 204', function () {
+        $course = Course::factory()->create();
+        $other = Course::factory()->create();
+
+        deleteJson(route('courses.destroy', $course))->assertNoContent();
+
+        expect(Course::all()->modelKeys())->toBe([$other->id]);
     });
 });

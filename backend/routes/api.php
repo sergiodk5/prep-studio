@@ -9,5 +9,4 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::apiResource('courses', CourseController::class)
-    ->only(['index', 'show', 'store', 'update'])
     ->missing(fn () => response()->json(['message' => 'Course not found'], 404));
