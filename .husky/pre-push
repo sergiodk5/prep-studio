@@ -1,0 +1,2 @@
+(cd frontend && npx vitest run)
+(cd backend && php artisan test)
