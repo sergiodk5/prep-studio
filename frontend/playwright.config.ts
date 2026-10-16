@@ -104,7 +104,9 @@ export default defineConfig({
     },
     {
       name: 'Vite',
-      command: 'npm run dev:api -- --port 5174 --strictPort',
+      command: process.env.CI
+        ? 'npm run build-only && npm run preview -- --port 5174 --strictPort'
+        : 'npm run dev:api -- --port 5174 --strictPort',
       url: 'http://localhost:5174',
       reuseExistingServer: !process.env.CI,
     },

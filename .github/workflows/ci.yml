@@ -23,14 +23,6 @@ jobs:
       - run: npm run check:lint
       - run: npm run build
       - run: npx vitest run
-      - run: npx playwright install --with-deps
-      - run: npx playwright test
-      - uses: actions/upload-artifact@v7
-        if: ${{ !cancelled() }}
-        with:
-          name: playwright-report
-          path: frontend/playwright-report/
-          retention-days: 14
 
   backend:
     runs-on: ubuntu-latest
@@ -61,3 +53,46 @@ jobs:
       - run: cp .env.example .env && php artisan key:generate
       - run: vendor/bin/pint --test
       - run: php artisan test
+  e2e:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    services:
+      mongodb:
+        image: mongo:8.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: prep
+          MONGO_INITDB_ROOT_PASSWORD: prep
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mongodb
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist --no-progress
+        working-directory: backend
+      - run: cp .env.example .env && php artisan key:generate
+        working-directory: backend
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
