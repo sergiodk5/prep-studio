@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCourseRequest;
 use App\Http\Resources\CourseResource;
 use App\Models\Course;
 use Illuminate\Http\Request;
@@ -14,9 +15,14 @@ class CourseController extends Controller
         return CourseResource::collection(Course::orderBy('_id')->get());
     }
 
-    public function store(Request $request)
+    public function store(StoreCourseRequest $request): CourseResource
     {
-        //
+        $course = Course::create([
+            ...$request->validated(),
+            'description' => $request->validated('description') ?? '',
+        ]);
+
+        return new CourseResource($course);
     }
 
     public function show(Course $course): CourseResource

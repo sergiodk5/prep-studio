@@ -4,6 +4,7 @@ use App\Models\Course;
 use MongoDB\BSON\ObjectId;
 
 use function Pest\Laravel\getJson;
+use function Pest\Laravel\postJson;
 use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
@@ -38,6 +39,45 @@ describe('index', function () {
                     'updatedAt' => '2026-10-16T10:00:00.000Z',
                 ],
             ]);
+    });
+});
+
+describe('store', function () {
+    it('creates a course with server-owned fields and returns 201', function () {
+        travelTo('2026-10-16 10:00:00');
+
+        $response = postJson(route('courses.store'), [
+            'title' => '   New course   ',
+            'track' => 'pm',
+            'description' => '',
+            'version' => 99,
+            'outline' => [['lessonId' => 'x', 'title' => 'Injected', 'position' => 1]],
+        ]);
+
+        $course = Course::sole();
+        $response->assertCreated()->assertExactJson([
+            'id' => $course->id,
+            'title' => 'New course',
+            'track' => 'pm',
+            'description' => '',
+            'outline' => [],
+            'version' => 1,
+            'updatedAt' => '2026-10-16T10:00:00.000Z',
+        ]);
+    });
+
+    it('returns 422 with field errors and stores nothing when input is invalid', function () {
+        postJson(route('courses.store'), ['title' => '  ', 'track' => 'design'])
+            ->assertUnprocessable()
+            ->assertExactJson([
+                'message' => 'Please fix the highlighted fields',
+                'errors' => [
+                    'title' => ['Title is required'],
+                    'track' => ['Choose a track'],
+                ],
+            ]);
+
+        expect(Course::count())->toBe(0);
     });
 });
 
