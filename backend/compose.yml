@@ -1,0 +1,27 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: prep-studio-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: prep
+      MONGO_INITDB_ROOT_PASSWORD: prep
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongodb:/data/db
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: prep-studio-mongo-express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://prep:prep@mongodb:27017/?authSource=admin
+      ME_CONFIG_BASICAUTH: "false"
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      - mongodb
+
+volumes:
+  mongodb:
