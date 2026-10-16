@@ -4,6 +4,7 @@ use App\Models\Course;
 use App\Models\Lesson;
 use MongoDB\BSON\ObjectId;
 
+use function Pest\Laravel\deleteJson;
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\patchJson;
 use function Pest\Laravel\postJson;
@@ -152,5 +153,25 @@ describe('update', function () {
             ->assertJsonValidationErrors(['version']);
 
         expect($lesson->fresh()->title)->toBe('Old');
+    });
+});
+
+describe('destroy', function () {
+    it('deletes the lesson and renumbers the outline without touching the course version', function () {
+        $course = Course::factory()->create();
+        foreach (['First', 'Second', 'Third'] as $title) {
+            postJson(route('courses.lessons.store', $course), ['title' => $title]);
+        }
+        [$first, $second, $third] = Lesson::orderBy('_id')->get()->all();
+
+        deleteJson('/api/lessons/'.$second->id)->assertNoContent();
+
+        $course->refresh();
+        expect(Lesson::all()->modelKeys())->toBe([$first->id, $third->id])
+            ->and($course->outline)->toEqual([
+                ['lessonId' => $first->id, 'title' => 'First', 'position' => 0],
+                ['lessonId' => $third->id, 'title' => 'Third', 'position' => 1],
+            ])
+            ->and($course->version)->toBe(1);
     });
 });

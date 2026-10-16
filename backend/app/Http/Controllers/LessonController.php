@@ -8,6 +8,8 @@ use App\Http\Resources\LessonResource;
 use App\Models\Course;
 use App\Models\Lesson;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
+use MongoDB\Collection;
 
 class LessonController extends Controller
 {
@@ -63,8 +65,28 @@ class LessonController extends Controller
         return new LessonResource($lesson);
     }
 
-    public function destroy(Lesson $lesson)
+    public function destroy(Lesson $lesson): Response
     {
-        //
+        Course::raw(fn (Collection $courses) => $courses->updateOne(
+            ['outline.lessonId' => $lesson->id],
+            [
+                ['$set' => ['outline' => ['$filter' => [
+                    'input' => '$outline',
+                    'cond' => ['$ne' => ['$$this.lessonId', $lesson->id]],
+                ]]]],
+                ['$set' => ['outline' => ['$map' => [
+                    'input' => ['$range' => [0, ['$size' => '$outline']]],
+                    'as' => 'position',
+                    'in' => ['$mergeObjects' => [
+                        ['$arrayElemAt' => ['$outline', '$$position']],
+                        ['position' => '$$position'],
+                    ]],
+                ]]]],
+            ],
+        ));
+
+        $lesson->delete();
+
+        return response()->noContent();
     }
 }
