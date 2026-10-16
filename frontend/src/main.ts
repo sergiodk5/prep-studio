@@ -8,7 +8,7 @@ import '@/assets/main.css'
 import App from '@/App.vue'
 import router from '@/router'
 
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV && import.meta.env.VITE_API_MOCKS !== 'false') {
   const { startMocking } = await import('@/mocks/browser')
   await startMocking()
 }
