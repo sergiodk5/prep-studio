@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LessonController;
+use App\Http\Controllers\Testing\ResetDatabaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,10 @@ Route::apiResource('courses', CourseController::class)
 Route::post('courses/{course}/lessons', [LessonController::class, 'store'])
     ->name('courses.lessons.store')
     ->missing(fn () => response()->json(['message' => 'Course not found'], 404));
+
+if (app()->environment('e2e')) {
+    Route::post('testing/reset', ResetDatabaseController::class)->name('testing.reset');
+}
 
 Route::apiResource('lessons', LessonController::class)
     ->except(['index', 'store'])
