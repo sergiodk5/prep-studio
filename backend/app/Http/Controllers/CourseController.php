@@ -6,6 +6,7 @@ use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Http\Resources\CourseResource;
 use App\Models\Course;
+use App\Models\Lesson;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -59,6 +60,7 @@ class CourseController extends Controller
     public function destroy(Course $course): Response
     {
         $course->delete();
+        Lesson::where('courseId', $course->id)->delete();
 
         return response()->noContent();
     }

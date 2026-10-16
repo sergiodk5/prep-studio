@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Course;
+use App\Models\Lesson;
 use MongoDB\BSON\ObjectId;
 
 use function Pest\Laravel\deleteJson;
@@ -11,6 +12,7 @@ use function Pest\Laravel\travelTo;
 
 beforeEach(function () {
     Course::truncate();
+    Lesson::truncate();
 });
 
 describe('index', function () {
@@ -160,12 +162,15 @@ describe('update', function () {
 });
 
 describe('destroy', function () {
-    it('deletes only that course and returns 204', function () {
+    it('deletes only that course and its lessons and returns 204', function () {
         $course = Course::factory()->create();
         $other = Course::factory()->create();
+        Lesson::factory()->create(['courseId' => $course->id]);
+        $otherLesson = Lesson::factory()->create(['courseId' => $other->id]);
 
         deleteJson(route('courses.destroy', $course))->assertNoContent();
 
-        expect(Course::all()->modelKeys())->toBe([$other->id]);
+        expect(Course::all()->modelKeys())->toBe([$other->id])
+            ->and(Lesson::all()->modelKeys())->toBe([$otherLesson->id]);
     });
 });
