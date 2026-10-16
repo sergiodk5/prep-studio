@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Course;
+use MongoDB\BSON\ObjectId;
 
 use function Pest\Laravel\getJson;
 use function Pest\Laravel\travelTo;
@@ -37,5 +38,32 @@ describe('index', function () {
                     'updatedAt' => '2026-10-16T10:00:00.000Z',
                 ],
             ]);
+    });
+});
+
+describe('show', function () {
+    it('returns one course by id', function () {
+        travelTo('2026-10-16 10:00:00');
+        Course::factory()->create();
+        $course = Course::factory()->create(['title' => 'Target']);
+
+        getJson(route('courses.show', $course))
+            ->assertOk()
+            ->assertExactJson([
+                'id' => $course->id,
+                'title' => 'Target',
+                'track' => $course->track,
+                'description' => $course->description,
+                'outline' => [],
+                'version' => 1,
+                'updatedAt' => '2026-10-16T10:00:00.000Z',
+            ]);
+
+    });
+
+    it('returns 404 with the contract message when the course does not exist', function () {
+        getJson(route('courses.show', (string) new ObjectId))
+            ->assertNotFound()
+            ->assertExactJson(['message' => 'Course not found']);
     });
 });

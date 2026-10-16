@@ -19,9 +19,9 @@ class CourseController extends Controller
         //
     }
 
-    public function show(Course $course)
+    public function show(Course $course): CourseResource
     {
-        //
+        return new CourseResource($course);
     }
 
     public function update(Request $request, Course $course)
