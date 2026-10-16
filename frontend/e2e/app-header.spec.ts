@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 test('shows the app header on the home page', async ({ page }) => {
   await page.goto('/')

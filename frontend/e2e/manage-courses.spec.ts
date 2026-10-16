@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 test('shows a conflict when another tab renamed the course first', async ({ context }) => {
   const tabA = await context.newPage()

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 
 test('edits a lesson and keeps the changes after a reload', async ({ page }) => {
   await page.goto('/courses/seed-technical')
