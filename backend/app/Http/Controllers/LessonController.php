@@ -10,11 +10,6 @@ use Illuminate\Http\Request;
 
 class LessonController extends Controller
 {
-    public function index()
-    {
-        //
-    }
-
     public function store(StoreLessonRequest $request, Course $course): LessonResource
     {
         $lesson = new Lesson($request->validated());
@@ -31,9 +26,9 @@ class LessonController extends Controller
         return new LessonResource($lesson);
     }
 
-    public function show(Lesson $lesson)
+    public function show(Lesson $lesson): LessonResource
     {
-        //
+        return new LessonResource($lesson);
     }
 
     public function update(Request $request, Lesson $lesson)

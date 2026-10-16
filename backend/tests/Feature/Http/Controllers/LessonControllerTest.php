@@ -4,6 +4,7 @@ use App\Models\Course;
 use App\Models\Lesson;
 use MongoDB\BSON\ObjectId;
 
+use function Pest\Laravel\getJson;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\travelTo;
 
@@ -65,5 +66,23 @@ describe('store', function () {
 
         expect(Lesson::count())->toBe(0)
             ->and($course->fresh()->outline)->toBe([]);
+    });
+});
+
+describe('show', function () {
+    it('returns one lesson by id', function () {
+        Lesson::factory()->create();
+        $lesson = Lesson::factory()->create(['title' => 'Target']);
+
+        getJson('/api/lessons/'.$lesson->id)
+            ->assertOk()
+            ->assertJsonPath('id', $lesson->id)
+            ->assertJsonPath('title', 'Target');
+    });
+
+    it('returns 404 with the contract message when the lesson does not exist', function () {
+        getJson(route('lessons.show', (string) new ObjectId))
+            ->assertNotFound()
+            ->assertExactJson(['message' => 'Lesson not found']);
     });
 });
