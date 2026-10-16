@@ -1,0 +1,4 @@
+{
+  "editor.formatOnSave": true,
+  "[php]": { "editor.defaultFormatter": "laravel.vscode-laravel" }
+}
