@@ -17,5 +17,5 @@ Route::post('courses/{course}/lessons', [LessonController::class, 'store'])
     ->missing(fn () => response()->json(['message' => 'Course not found'], 404));
 
 Route::apiResource('lessons', LessonController::class)
-    ->only(['show'])
+    ->only(['show', 'update'])
     ->missing(fn () => response()->json(['message' => 'Lesson not found'], 404));

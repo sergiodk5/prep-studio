@@ -5,6 +5,7 @@ use App\Models\Lesson;
 use MongoDB\BSON\ObjectId;
 
 use function Pest\Laravel\getJson;
+use function Pest\Laravel\patchJson;
 use function Pest\Laravel\postJson;
 use function Pest\Laravel\travelTo;
 
@@ -84,5 +85,72 @@ describe('show', function () {
         getJson(route('lessons.show', (string) new ObjectId))
             ->assertNotFound()
             ->assertExactJson(['message' => 'Lesson not found']);
+    });
+});
+
+describe('update', function () {
+    it('renames the lesson and its outline entry without touching the course version', function () {
+        travelTo('2026-10-16 10:00:00');
+        $course = Course::factory()->create();
+        postJson(route('courses.lessons.store', $course), ['title' => 'First']);
+        postJson(route('courses.lessons.store', $course), ['title' => 'Second']);
+        [$first, $second] = Lesson::orderBy('_id')->get()->all();
+        travelTo('2026-10-16 11:00:00');
+
+        patchJson('/api/lessons/'.$second->id, [
+            'title' => '  Renamed  ',
+            'notes' => '',
+            'version' => 1,
+            'courseId' => 'injected',
+            'position' => 5,
+        ])
+            ->assertOk()
+            ->assertExactJson([
+                'id' => $second->id,
+                'courseId' => $course->id,
+                'title' => 'Renamed',
+                'position' => 1,
+                'notes' => '',
+                'tags' => [],
+                'items' => [],
+                'version' => 2,
+                'lock' => null,
+                'updatedAt' => '2026-10-16T11:00:00.000Z',
+            ]);
+
+        $course->refresh();
+        expect($course->outline)->toEqual([
+            ['lessonId' => $first->id, 'title' => 'First', 'position' => 0],
+            ['lessonId' => $second->id, 'title' => 'Renamed', 'position' => 1],
+        ])
+            ->and($course->version)->toBe(1)
+            ->and($course->updatedAt->toIso8601ZuluString('millisecond'))->toBe('2026-10-16T10:00:00.000Z');
+    });
+
+    it('returns 409 with the current lesson and keeps lesson and outline when the version is stale', function () {
+        $course = Course::factory()->create();
+        postJson(route('courses.lessons.store', $course), ['title' => 'Original']);
+        $lesson = Lesson::sole();
+
+        patchJson(route('lessons.update', $lesson), ['title' => 'Mine', 'version' => 1])->assertOk();
+
+        patchJson(route('lessons.update', $lesson), ['title' => 'Theirs', 'version' => 1])
+            ->assertConflict()
+            ->assertJsonPath('message', 'This lesson was changed by someone else')
+            ->assertJsonPath('current.title', 'Mine')
+            ->assertJsonPath('current.version', 2);
+
+        expect($lesson->fresh()->title)->toBe('Mine')
+            ->and($course->fresh()->outline[0]['title'])->toBe('Mine');
+    });
+
+    it('returns 422 and keeps the lesson when the version is missing', function () {
+        $lesson = Lesson::factory()->create(['title' => 'Old']);
+
+        patchJson(route('lessons.update', $lesson), ['title' => 'New'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['version']);
+
+        expect($lesson->fresh()->title)->toBe('Old');
     });
 });
